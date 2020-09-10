@@ -1,0 +1,46 @@
+Associate Cloud Engineer: Learning Phase 1 Main Track Channel (2020)
+
+Course: Google Cloud Platform Fundamentals - Core Infrastructure
+
+Virtual Machines in the Cloud
+
+Google Cloud Fundamentals: Getting Started with Compute Engine lab
+
+Open cloud shell
+
+Task 2: Create a virtual machine using the GCP Console
+
+$ gcloud compute images list
+$ gcloud compute instances create my-vm-1 --zone=us-central1-a --image-project "debian-cloud" --image "debian-9-stretch-v20200902" --subnet "default" --tags=my-vm-1
+$ gcloud compute firewall-rules create my-vm-1-allow-http --allow tcp:80 --target-tags=my-vm-1
+
+Task 3: Create a virtual machine using the gcloud command line
+
+$ gcloud compute zones list | grep us-central1
+$ gcloud config set compute/zone us-central1-f
+$ gcloud compute instances create "my-vm-2" \
+--machine-type "n1-standard-1" \
+--image-project "debian-cloud" \
+--image "debian-9-stretch-v20190213" \
+--subnet "default"
+
+Task 4: Connect between VM instances
+
+$ gcloud compute ssh my-vm-2
+$ ping -c 3 my-vm-1
+success
+$ ssh my-vm-1
+enter: yes
+$ sudo apt-get install nginx-light -y
+$ sudo nano /var/www/html/index.nginx-debian.html
+Under the h1 tag enter: Hi from Ahmed
+Ctrl-o
+Ctrl-x
+$ curl http://localhost/
+$ exit
+$ curl http://my-vm-1/
+$ gcloud compute instances list my-vm-1
+my-vm-1 external IP is: []
+$ curl http://[my-vm-1 external IP]/
+
+End of the lab

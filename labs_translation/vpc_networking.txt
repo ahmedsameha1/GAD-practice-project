@@ -1,0 +1,159 @@
+Associate Cloud Engineer: Learning Phase 1 Main Track Channel (2020)
+
+Course: Essential Google Cloud Infrastructure: Foundation
+
+Module: Virtual Networks
+
+VPC Networking lab
+
+Open cloud shell
+
+Task 1. Explore the default network
+
+View the subnets
+
+$ gcloud compute networks subnets list
+
+View the routes
+
+$ gcloud compute routes list
+
+View the firewall rules
+
+$ gcloud compute firewall-rules list
+
+Delete the Firewall rules
+
+$ gcloud compute firewall-rules delete default-allow-icmp default-allow-internal default-allow-rdp default-allow-ssh
+
+Delete the default network
+
+$ gcloud compute networks delete default
+$ gcloud compute routes list
+$ gcloud compute firewall-rules list
+
+Try to create a VM instance
+
+$ gcloud compute instances create mynet-us-vm --zone=us-central1-c --machine-type=n1-standard-1
+The following error is shown: ERROR: (gcloud.compute.instances.create) Could not fetch resource:
+ - Invalid value for field 'resource.networkInterfaces[0].network': 'https://compute.googleapis.com/compute/v1/projects/qwiklabs-gcp-03-2bd33da62b4c/global/networks/default'. The referenced network resou
+rce cannot be found
+
+Task 2. Create an auto mode network
+
+Create an auto mode VPC network with firewall rules
+
+$ gcloud compute networks create mynetwork --subnet-mode=auto
+$ gcloud compute firewall-rules create mynetwork-allow-internal --network mynetwork --allow all --source-ranges=0.0.0.0/0 --priority=65534
+$ gcloud compute firewall-rules create mynetwork-allow-ssh --network mynetwork --allow tcp:22
+$ gcloud compute firewall-rules create mynetwork-allow-rdp --network mynetwork --allow tcp:3389
+$ gcloud compute firewall-rules create mynetwork-allow-icmp --network mynetwork --allow icmp
+$ gcloud compute networks subnets list
+
+Record the IP address range for the subnets in us-central1 and europe-west1. These will be referred to in the next steps.
+us-central1: 10.128.0.0/20
+europe-west1: 10.132.0.0/20
+
+Create a VM instance in us-central1
+
+$ gcloud compute instances create mynet-us-vm --zone=us-central1-c --machine-type=n1-standard-1 --network=mynetwork
+The assigned Internal IP is 10.128.0.2
+The assigned External IP is 35.184.84.70
+
+Create a VM instance in europe-west1
+
+$ gcloud compute instances create mynet-eu-vm --zone=europe-west1-c --machine-type=n1-standard-1 --network=mynetwork
+The assigned Internal IP is 10.132.0.2
+The assigned External IP is 104.155.56.56
+
+Verify connectivity for the VM instances
+
+$ gcloud compute ssh mynet-us-vm
+
+$ ping -c 3 10.132.0.2
+success
+
+$ ping -c 3 mynet-eu-vm
+success
+
+$ ping -c 3 104.155.56.56
+success
+
+To exit the ssh session:
+$ exit
+
+Convert the network to a custom mode network
+
+$ gcloud compute networks update mynetwork --switch-to-custom-subnet-mode
+
+Task 3. Create custom mode networks
+
+Create the managementnet network
+
+$ gcloud compute networks create managementnet --subnet-mode=custom 
+$ gcloud compute networks subnets create managementsubnet-us --network=managementnet --region=us-central1 --range=10.130.0.0/20
+
+Create the privatenet network
+
+$ gcloud compute networks create privatenet --subnet-mode=custom
+$ gcloud compute networks subnets create privatesubnet-us --network=privatenet --region=us-central1 --range=172.16.0.0/24
+$ gcloud compute networks subnets create privatesubnet-eu --network=privatenet --region=europe-west1 --range=172.20.0.0/20
+$ gcloud compute networks list
+$ gcloud compute networks subnets list --sort-by=NETWORK
+
+Create the firewall rules for managementnet
+
+$ gcloud compute firewall-rules create managementnet-allow-icmp-ssh-rdp --direction=INGRESS --network=managementnet --action=ALLOW --rules=icmp,tcp:22,tcp:3389 --source-ranges=0.0.0.0/0
+
+Create the firewall rules for privatenet
+
+$ gcloud compute firewall-rules create privatenet-allow-icmp-ssh-rdp --direction=INGRESS --priority=1000 --network=privatenet --action=ALLOW --rules=icmp,tcp:22,tcp:3389 --source-ranges=0.0.0.0/0
+$ gcloud compute firewall-rules list --sort-by=NETWORK
+
+Create the managementnet-us-vm instance
+
+$ gcloud compute instances create managementnet-us-vm --zone=us-central1-c --machine-type=f1-micro --network=managementnet --subnet=managementsubnet-us
+
+Create the privatenet-us-vm instance
+
+$ gcloud compute instances create privatenet-us-vm --zone=us-central1-c --machine-type=f1-micro --subnet=privatesubnet-us
+$ gcloud compute instances list --sort-by=ZONE
+
+Task 4. Explore the connectivity across networks
+
+Ping the external IP addresses
+
+mynet-eu-vm external IP: 104.155.56.56
+managementnet-us-vm external IP: 35.225.181.73
+privatenet-us-vm external IP: 35.224.51.249
+
+$ gcloud compute ssh mynet-us-vm
+$ ping -c 3 104.155.56.56
+success
+$ ping -c 3 35.225.181.73
+success
+$ ping -c 3 35.224.51.249
+success
+
+Ping the internal IP addresses
+
+mynet-eu-vm internal IP: 10.132.0.2
+managementnet-us-vm internal IP: 10.130.0.2
+privatenet-us-vm internal IP: 172.16.0.2
+
+$ ping -c 3 10.132.0.2
+success
+$ ping -c 3 10.130.0.2
+100% packet loss
+$ ping -c 3 172.16.0.2
+100% packet loss
+
+To exit ssh session
+$ exit
+
+Task 5. Review
+
+no commands
+
+
+End your lab
